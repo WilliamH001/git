@@ -439,73 +439,104 @@ run_dir_diff_test () {
 }
 
 run_dir_diff_test 'difftool -d' '
+	cat >expect <<-\EOF &&
+	file
+	file2
+
+	file
+	file2
+	sub
+	EOF
 	git difftool -d $symlinks --extcmd ls branch >output &&
-	grep sub output &&
-	grep file output
+	grep -v ^/ output >actual &&
+	test_cmp expect actual
 '
 
 run_dir_diff_test 'difftool --dir-diff' '
+	cat >expect <<-\EOF &&
+	file
+	file2
+
+	file
+	file2
+	sub
+	EOF
 	git difftool --dir-diff $symlinks --extcmd ls branch >output &&
-	grep sub output &&
-	grep file output
+	grep -v ^/ output >actual &&
+	test_cmp expect actual
 '
 
 run_dir_diff_test 'difftool --dir-diff ignores --prompt' '
+	cat >expect <<-\EOF &&
+	file
+	file2
+
+	file
+	file2
+	sub
+	EOF
 	git difftool --dir-diff $symlinks --prompt --extcmd ls branch >output &&
-	grep sub output &&
-	grep file output
+	grep -v ^/ output >actual &&
+	test_cmp expect actual
 '
 
 run_dir_diff_test 'difftool --dir-diff branch from subdirectory' '
 	(
 		cd sub &&
+		cat >expect <<-\EOF &&
+		file
+		file2
+
+		file
+		file2
+		sub
+		EOF
 		git difftool --dir-diff $symlinks --extcmd ls branch >output &&
-		# "sub" must only exist in "right"
-		# "file" and "file2" must be listed in both "left" and "right"
-		grep sub output >sub-output &&
-		test_line_count = 1 sub-output &&
-		grep file"$" output >file-output &&
-		test_line_count = 2 file-output &&
-		grep file2 output >file2-output &&
-		test_line_count = 2 file2-output
+		grep -v ^/ output >actual &&
+		test_cmp expect actual
 	)
 '
 
 run_dir_diff_test 'difftool --dir-diff v1 from subdirectory' '
 	(
 		cd sub &&
+		cat >expect <<-\EOF &&
+		file
+		sub
+
+		file
+		sub
+		EOF
 		git difftool --dir-diff $symlinks --extcmd ls v1 >output &&
-		# "sub" and "file" exist in both v1 and HEAD.
-		# "file2" is unchanged.
-		grep sub output >sub-output &&
-		test_line_count = 2 sub-output &&
-		grep file output >file-output &&
-		test_line_count = 2 file-output &&
-		! grep file2 output
+		grep -v ^/ output >actual &&
+		test_cmp expect actual
 	)
 '
 
 run_dir_diff_test 'difftool --dir-diff branch from subdirectory w/ pathspec' '
 	(
 		cd sub &&
+		cat >expect <<-\EOF &&
+
+		sub
+		EOF
 		git difftool --dir-diff $symlinks --extcmd ls branch -- .>output &&
-		# "sub" only exists in "right"
-		# "file" and "file2" must not be listed
-		grep sub output >sub-output &&
-		test_line_count = 1 sub-output &&
-		! grep file output
+		grep -v ^/ output >actual &&
+		test_cmp expect actual
 	)
 '
 
 run_dir_diff_test 'difftool --dir-diff v1 from subdirectory w/ pathspec' '
 	(
 		cd sub &&
+		cat >expect <<-\EOF &&
+		sub
+
+		sub
+		EOF
 		git difftool --dir-diff $symlinks --extcmd ls v1 -- .>output &&
-		# "sub" exists in v1 and HEAD
-		# "file" is filtered out by the pathspec
-		grep sub output >sub-output &&
-		test_line_count = 2 sub-output &&
-		! grep file output
+		grep -v ^/ output >actual &&
+		test_cmp expect actual
 	)
 '
 
@@ -516,18 +547,31 @@ run_dir_diff_test 'difftool --dir-diff from subdirectory with GIT_DIR set' '
 		GIT_WORK_TREE=$(pwd) &&
 		export GIT_WORK_TREE &&
 		cd sub &&
+		cat >expect <<-\EOF &&
+
+		sub
+		EOF
 		git difftool --dir-diff $symlinks --extcmd ls \
 			branch -- sub >output &&
-		grep sub output &&
-		! grep file output
+		grep -v ^/ output >actual &&
+		test_cmp expect actual
 	)
 '
 
 run_dir_diff_test 'difftool --dir-diff when worktree file is missing' '
 	test_when_finished git reset --hard &&
 	rm file2 &&
+	cat >expect <<-\EOF &&
+	file
+	file2
+
+	file
+	file2
+	sub
+	EOF
 	git difftool --dir-diff $symlinks --extcmd ls branch master >output &&
-	grep file2 output
+	grep -v ^/ output >actual &&
+	test_cmp expect actual
 '
 
 run_dir_diff_test 'difftool --dir-diff with unmerged files' '
