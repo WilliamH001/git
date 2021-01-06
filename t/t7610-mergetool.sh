@@ -849,4 +849,14 @@ test_expect_success 'mergetool automerge' '
 	git commit -m "test resolved with mergetool"
 '
 
+test_expect_success 'mergetool --tool-help shows all recognized tools' '
+	# Remove fake tools added in previous tests
+	test_might_fail git config --unset merge.tool &&
+	test_might_fail git config --remove-section mergetool.mytool &&
+	test_might_fail git config --remove-section mergetool.mybase &&
+	git mergetool --tool-help >output &&
+	grep "$(printf "\t")" output >mergetools &&
+	test_line_count = 30 mergetools
+'
+
 test_done
